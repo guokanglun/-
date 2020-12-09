@@ -40,7 +40,8 @@
                 </section>
                 <section class="login_message">
                   <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
-                  <img class="get_verification" src="./images/captcha.svg" alt="captcha">
+                  <img class="get_verification" src="http://localhost:4000/captcha" alt="captcha"
+                       @click="changeCaptcha" ref="captcha">
                 </section>
               </section>
             </div>
@@ -60,7 +61,7 @@
 
 <script>
   import AlertTip from "../../components/AlertTip";
-
+  import {reqSendCode, reqSmsLogin, reqPwdLogin} from '../../api'
     export default {
         name: "Login",
         data(){
@@ -84,52 +85,106 @@
             }
         },
         methods:{
-            getCode(){
+           async getCode(){
                 if(this.computeTime == 0){
                     this.computeTime = 30;
-                    const timer = setInterval(()=>{
+                    this.timer = setInterval(()=>{
                         this.computeTime --;
                         if(this.computeTime === 0){
-                            clearInterval(timer)
+                            clearInterval(this.timer)
                         }
                     }, 1000)
+
+                    // 发送短信验证码
+                    let result = await reqSendCode(this.phone);
+                    if(result.code === 1){
+                        this.showAlert = true;
+                        this.alertText = result.msg;
+                        clearInterval(this.timer);
+                        this.computeTime = 0;
+                    }
+
                 }
             },
             closeTip(){
                 this.showAlert = false;
                 this.alertText = ''
             },
-            login(){
+            async login(){
                 if(this.loginWay){  // 短信登录
                     const {phone, code} = this;
                     if(!/1\d{10}/.test(phone)){
                         // 手机号格式不正确
                         this.showAlert = true;
                         this.alertText = '手机号格式不正确'
+                        return
                     }
                     else if(!/^\d{6}$/.test(code)){
                         // 验证码不正确
                         this.showAlert = true;
                         this.alertText = '验证码不正确'
+                        return
                     }
+                    // 发送ajax请求短信登录
+                    const result = await reqSmsLogin(phone, code);
+                    if(result.code ===0){
+                        const userInfo = result.data
+                        // 将user 保存到Vuex
+                        this.$store.dispatch('receiveUser', {userInfo});
+                        //  goto 个人中心
+                        this.$router.replace('/profile')
+                    }else{
+                        const msg = result.msg;
+                        this.showAlert = true;
+                        this.alertText = msg
+                    }
+
+                    // 根据结果数据处理
+
                 }else{ // 密码登录
                     const {name, pwd, captcha} = this;
                     if(!name){
                         // 用户名不能为空
                         this.showAlert = true;
                         this.alertText = '用户名不能为空'
+                        return
                     }
                     else if(!pwd){
                         // 密码不能为空
                         this.showAlert = true;
                         this.alertText = '密码不能为空'
+                        return
                     }
                     else if(!captcha){
                         // 验证码不能为空
                         this.showAlert = true;
                         this.alertText = '验证码不能为空'
+                        return
                     }
+
+                    // 密码登录
+                    const result = await reqPwdLogin({name, pwd, captcha});
+                    if(result.code ===0){
+                        const userInfo = result.data;
+                        console.log(userInfo)
+                        // 保存到vuex
+                        this.$store.dispatch('receiveUser', {userInfo});
+                        // goto 个人中心
+                        this.$router.replace('/profile')
+
+                    }else{
+                        const msg = result.msg;
+                        // 刷新验证码
+                        this.$refs.captcha.src = 'http://localhost:4000/captcha?time=' + Date.now()
+                        this.captcha = '';
+                        this.showAlert = true;
+                        this.alertText = msg
+                    }
+
                 }
+            },
+            changeCaptcha(ev){
+                ev.target.src = 'http://localhost:4000/captcha?time=' + Date.now()
             }
         },
         components:{

@@ -15,7 +15,8 @@
       },
       mounted() {
           this.$store.dispatch('getAddress');
-          this.$store.dispatch('getCategory')
+          this.$store.dispatch('getCategory');
+          this.$store.dispatch('getUserInfo')
       }
   }
 </script>

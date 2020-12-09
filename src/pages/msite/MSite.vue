@@ -3,12 +3,15 @@
         <section class="msite">
           <!--首页头部-->
           <HeadTop :title="address.name">
-                      <span class="header_search" slot="left">
+
+            <router-link class="header_search" slot="left" to="/search">
             <i class="iconfont icon-sousuo"></i>
-          </span>
+          </router-link>
             <span class="header_login" slot="right">
-            <span class="header_login_text">登录|注册</span>
-          </span>
+              <span class="header_login_text">
+                {{ userInfo.name||'登录|注册' }}
+              </span>
+            </span>
           </HeadTop>
           <!--首页导航-->
           <nav class="msite_nav">
@@ -74,7 +77,7 @@
             }
         },
         computed:{
-            ...mapState(['address', 'categorys']),
+            ...mapState(['address', 'categorys','userInfo']),
 
             categorysArr(){
                 const max = 8;

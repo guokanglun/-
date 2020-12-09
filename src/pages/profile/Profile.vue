@@ -4,18 +4,17 @@
         <section class="profile">
           <HeadTop title="我的"></HeadTop>
           <section class="profile-number">
-
-            <router-link to= '/login' class="profile-link">
+            <router-link :to= 'userInfo._id?"/userinfo":"/login"' class="profile-link">
               <div class="profile_image">
                 <i class="iconfont icon-person"></i>
               </div>
               <div class="user-info">
-                <p class="user-info-top">登录/注册</p>
+                <p class="user-info-top" >{{ userInfo.name || '登录/注册' }}</p>
                 <p>
                 <span class="user-icon">
                   <i class="iconfont icon-shouji icon-mobile"></i>
                 </span>
-                  <span class="icon-mobile-number">暂无绑定手机号</span>
+                  <span class="icon-mobile-number">{{ userInfo.phone|| '暂无绑定手机号' }}</span>
                 </p>
               </div>
               <span class="arrow">
@@ -93,15 +92,23 @@
           </section>
         </section>
       </div>
-
+      <div class="logout" v-if="userInfo._id" @click="logout"> 退出登录 </div>
     </div>
 </template>
 
 <script>
   import HeadTop from "../../components/HeadTop";
-
+  import {mapState} from 'vuex'
     export default {
         name: "Profile",
+        computed:{
+          ...mapState(['userInfo'])
+        },
+        methods:{
+            logout(){
+                this.$store.dispatch('logout')
+            }
+        },
         components:{
             HeadTop
         }
@@ -109,6 +116,17 @@
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
+  .logout{
+    width: 100%
+    height: 30px
+    background-color red;
+    color:white;
+    text-align center;
+    line-height 30px;
+    margin-top 20px
+
+    font-size 20px
+  }
   .msite {
     position: relative;
     margin-top: 45px;
